@@ -515,6 +515,7 @@ public class TeamServer {
                 try {
                     Socket clientSocket = TeamServer.listenSocket.accept();
                     String ipconnect = "";
+                    System.out.println("Client connect : " + clientSocket.getInetAddress().getHostAddress());
                     try {
                         InetAddress inet = clientSocket.getInetAddress();
                         ipconnect = inet.getHostAddress();
