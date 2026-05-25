@@ -1,0 +1,1 @@
+nohup java -jar kpahpau.jar > game.log 2>&1 &
