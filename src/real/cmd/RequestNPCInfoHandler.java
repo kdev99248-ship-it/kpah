@@ -807,7 +807,7 @@ public class RequestNPCInfoHandler implements ICommandHandler {
                         (p.isTatPhiPhong() ? "Bật" : "Tắt") + " phi phong", 
                         (p.isTatMatNa() ? "Bật" : "Tắt") + " mặt nạ",
                         (p.isTatCanh() ? "Bật" : "Tắt") + " cánh",
-                        "Tinh Luyện Thần Binh","Gia Hạn VKTT(150l 7n)","Tạo Thần Khí","Cải Tạo Cải Trang","Bộ Sưu Tập"};
+                        "Tinh Luyện Thần Binh","Gia Hạn VKTT(150l 7n)","Tạo Thần Khí(VIP 3)","Cải Tạo Cải Trang","Bộ Sưu Tập"};
                     if (TeamServer.isServerLienDau()) {
                         menu = new String[]{"Vũ khí", "Trang bị", "Trang bị thú"};
                     }

@@ -3905,7 +3905,7 @@ public class Char extends LiveActor {
                     int att = this.getAttack();
                     // Thêm logic HoaHinh ở đây
                     if (actor.cat == 0 && this.getAnimalRide() != null && 
-                    this.getAnimalRide().isHoaHinh == 1 && Map.r.nextInt(100) < 100) { // tile hoahinh
+                    this.getAnimalRide().isHoaHinh() && Map.r.nextInt(100) < 100) { // tile hoahinh
                     
                     actor.applyHoaHinhDefenseReduction();
                     
@@ -17537,11 +17537,13 @@ public class Char extends LiveActor {
             if (isItemThanThu(template.type)) {
                 newItem.doAddOptionThanThu(template.atb[0]);
             }
-            if (newItem.isVukhiThoiTrang()) {
+            if (newItem.isThanKhi()) {
+                newItem.createAttributeThanKhiVip();
+            } else if (newItem.isVukhiThoiTrang()) {
                 newItem.createAttributeVuKhiThoiTrang();
-            }
-            if (newItem.isVukhiThoiTrang() && isMax) {
-                newItem.createAttributeVuKhiThoiTrangMax();
+                if (isMax) {
+                    newItem.createAttributeVuKhiThoiTrangMax();
+                }
             }
             newItem.createAttChoi();
             newItem.dateCreate = Char.getDayTime(0L);

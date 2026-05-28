@@ -2461,6 +2461,10 @@ public class Item extends Actor {
     public boolean isLuongNhatDao() {
         return this.getTemplate().id == 892;
     }
+
+    public boolean isThanKhi() {
+        return this.isQuatBaiTieu() || this.isGayNhuY() || this.isLuongNhatDao();
+    }
    
 
     
@@ -2482,7 +2486,7 @@ public class Item extends Actor {
                 } else if (isNguyetLinhTruong()) {
                     // Nguyệt Linh Trượng
                     return true;
-                } else if (isGayNhuY() || isQuatBaiTieu() || isLuongNhatDao()) {
+                } else if (isThanKhi()) {
                     // Gậy gay nhu y, quạt bài tiêu, lượng nhật đao
                     return true;
              
@@ -2637,6 +2641,29 @@ public class Item extends Actor {
             this.otherAtt[56] = (short) (98 + 192);
             this.otherAtt[55] = (short) (491 + 10);
         }
+    }
+
+    public void createAttributeThanKhiVip() {
+        if (!this.isThanKhi()) {
+            return;
+        }
+        this.colorName = Item.COLOR_MAGENTA;
+
+        this.newAtb[0] = 12;
+        this.newAtb[1] = 12;
+        this.newAtb[2] = 10;
+        this.newAtb[3] = 10;
+        this.newAtb[4] = 10;
+        this.newAtb[5] = 10;
+        this.newAtb[7] = 10;
+
+        this.lockAtb[0] = 25;
+        this.lockAtb[1] = 25;
+        this.lockAtb[2] = 25;
+
+        this.otherAtt[54] = 260;
+        this.otherAtt[55] = 550;
+        this.otherAtt[56] = 320;
     }
 
     public void createAttributeItemModel(final boolean isMax) {

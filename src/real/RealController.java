@@ -1642,6 +1642,11 @@ public class RealController extends ServerController {
                     it = (Item) all_item_shop_special.get(iditem);
                     int xu = it.getXuSell();
                     int luong = it.getLuongSell();
+                    if (Map.isVip3ShopSpecialFashionItem(it) && player.vip < 3) {
+                        player.sendMessage(MessageCreator.createServerAlertMessage("Bạn cần VIP 3 trở lên để mua thời trang này.", ""));
+                        return;
+                    }
+
                     if (player.getxu() < (long) xu) {
                         player.sendMessage(MessageCreator.createServerAlertMessage("Không đủ xu", ""));
                         return;
@@ -1709,7 +1714,7 @@ public class RealController extends ServerController {
                         player.sendMessage(MessageCreator.createServerAlertMessage("Đã mua 1 rương nguyên liệu", ""));
                         Database.instance.saveOrtherLog("", player.charname, " mua: " + it.getName() + " _ voi gia " + xu + " xu, " + luong + " luong. tien sau mua " + player.getxu() + " xu, " + player.getLuong() + " luong", "shopvip");
                         Database.instance.saveLogThongKeChiTieu(it.getName(), 0, it.getSoluong(), (long) (xu > 0 ? xu : (luong > 0 ? luong : 0)), money);
-                    } else if (it.isAoDai2021() || it.isTieuLongNu() || it.isDuongQua()) {
+                    } else if (it.isAoDai2021() || it.isTieuLongNu() || it.isDuongQua() || Map.isVip3ShopSpecialFashionItem(it)) {
                         if (player.vip <= 0) {
                             player.sendMessage(MessageCreator.createServerAlertMessage("Bạn Cần Vip 1 Trở lên để thực hiện tính năng này.", ""));
                             return;

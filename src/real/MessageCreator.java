@@ -1465,7 +1465,7 @@ public class MessageCreator {
             int userHorse = ch.rideHorse;
 
             // Kiểm tra isHoaHinh trước
-            if (ch.animalRide != null && ch.animalRide.isHoaHinh == 1 && !ch.isMasterClanAndHaveTown()) {
+            if (ch.animalRide != null && ch.animalRide.isHoaHinh() && !ch.isMasterClanAndHaveTown()) {
                 // Nếu đang hóa hình thì ghi -1 cho tất cả các byte
                 m.dos.writeByte(-1);  // userHorse
                 m.dos.writeByte(-1);  // fly
@@ -1717,7 +1717,7 @@ public class MessageCreator {
         }
         
         // Kiểm tra isHoaHinh trước
-        if (p.animalRide != null && p.animalRide.isHoaHinh == 1 && !p.isMasterClanAndHaveTown()) {
+        if (p.animalRide != null && p.animalRide.isHoaHinh() && !p.isMasterClanAndHaveTown()) {
             // Nếu đang hóa hình thì ghi -1 cho tất cả các byte
             m.dos.writeByte(-1);  // userHorse
             m.dos.writeByte(-1);  // fly

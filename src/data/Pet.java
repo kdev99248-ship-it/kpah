@@ -447,7 +447,25 @@ public class Pet extends Actor {
     }
 
     public void doUpdrage(Char p, int idLkd) {
-        int soluongDel = MATERIAL_UPDGRADE[this.itemPet.getTemplate().atb[0]];
+        if (this.itemPet == null || this.itemPet.getTemplate() == null) {
+            p.sendMessage(MessageCreator.createServerAlertMessage("Bạn phải gọi thú nuôi có trang bị ra trước.", ""));
+            return;
+        }
+
+        ItemTemplates currentTemplate = this.itemPet.getTemplate();
+        int currentLevel = currentTemplate.atb[0];
+        if (currentLevel <= 0 || currentLevel >= MATERIAL_UPDGRADE.length || currentLevel >= PC_UPDGRADE_OK.length || currentTemplate.idItemUpLevel < 0) {
+            p.sendMessage(MessageCreator.createServerAlertMessage("Thú nuôi đã đạt cấp tối đa.", ""));
+            return;
+        }
+
+        ItemTemplates nextTemplate = (ItemTemplates)((Hashtable)Map.itemTemplates.get(0)).get(Integer.valueOf(currentTemplate.idItemUpLevel));
+        if (nextTemplate == null) {
+            p.sendMessage(MessageCreator.createServerAlertMessage("Không tìm thấy mẫu nâng cấp tiếp theo của thú nuôi.", ""));
+            return;
+        }
+
+        int soluongDel = MATERIAL_UPDGRADE[currentLevel];
 
         for(int i = 0; i < GemTemplate.ID_MATERIAL_HIGHT[5].length; ++i) {
             if (p.listGemitem[GemTemplate.ID_MATERIAL_HIGHT[5][i]] < soluongDel && p.listGemitemLock[GemTemplate.ID_MATERIAL_HIGHT[5][i]] < soluongDel) {
@@ -477,16 +495,20 @@ public class Pet extends Actor {
             }
         }
 
-        String info = "nâng cấp " + this.getName() + " " + (idLkd > -1 ? " su dung lkd " + idLkd : " ko su dung lkd") + " lên cấp " + (this.itemPet.getTemplate().atb[0] + 1);
-        int pc = PC_UPDGRADE_OK[this.itemPet.getTemplate().atb[0]] + pcLKD;
+        String info = "nâng cấp " + this.getName() + " " + (idLkd > -1 ? " su dung lkd " + idLkd : " ko su dung lkd") + " lên cấp " + (currentLevel + 1);
+        int pc = PC_UPDGRADE_OK[currentLevel] + pcLKD;
         if (Map.r.nextInt(100) < pc) {
             this.lvDetail.setExp(this.lvDetail.getExp() + 1L);
             this.lastlevel = (short)this.lvDetail.lv;
-            ItemTemplates template = (ItemTemplates)((Hashtable)Map.itemTemplates.get(0)).get(Integer.valueOf(this.itemPet.getTemplate().idItemUpLevel));
+            ItemTemplates template = nextTemplate;
             Item newItem = null;
             newItem = new Item(template, false, 0, 0, template.id);
             newItem.id = 0;
             newItem.owner = 0;
+            if (this.itemPet.minuteExist > 0) {
+                newItem.minuteExist = this.itemPet.minuteExist;
+                newItem.timeLoan = this.itemPet.timeLoan;
+            }
             newItem.level = newItem.getTemplate().level;
             newItem.identify = 0;
             newItem.clazz = 0;

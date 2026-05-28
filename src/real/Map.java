@@ -2400,6 +2400,109 @@ public class Map implements Runnable {
         return null;
     }
 
+    private static final int[] VIP3_SHOP_SPECIAL_FASHION_ITEMS = {736, 737, 740, 741, 743, 744, 754, 755};
+    private static final boolean FORCE_ALL_WORLD_BOSS_ONLINE = true;
+    private static final long FORCE_BOSS_ONLINE_DELAY = 1000L;
+    private static final int VILLAGE_PLAYER_BOT_TYPE = -79;
+
+    public static boolean isVip3ShopSpecialFashionItem(Item item) {
+        if (item == null) {
+            return false;
+        }
+
+        for (int i = 0; i < VIP3_SHOP_SPECIAL_FASHION_ITEMS.length; i++) {
+            if (item.tempateID == VIP3_SHOP_SPECIAL_FASHION_ITEMS[i]) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static void prepareBossOnline(Boss boss) {
+        if (FORCE_ALL_WORLD_BOSS_ONLINE) {
+            openBossNow(boss, System.currentTimeMillis() + FORCE_BOSS_ONLINE_DELAY);
+        }
+    }
+
+    public static void openAllBossNow() {
+        long bornTime = System.currentTimeMillis() + FORCE_BOSS_ONLINE_DELAY;
+        openBossListNow(boss, bornTime);
+        openBossListNow(bossTime, bornTime);
+        if (timeCheckCallBoss > bornTime) {
+            timeCheckCallBoss = bornTime;
+        }
+    }
+
+    private static void openBossListNow(Vector<Boss> bosses, long bornTime) {
+        if (bosses == null) {
+            return;
+        }
+
+        for (int i = 0; i < bosses.size(); i++) {
+            openBossNow((Boss) bosses.get(i), bornTime);
+        }
+    }
+
+    private static void openBossNow(Boss boss, long bornTime) {
+        if (boss == null) {
+            return;
+        }
+
+        setBossOpenState(boss, true);
+        if (boss.map == null || boss.isDead) {
+            boss.isDead = true;
+            boss.bornTime = bornTime;
+            boss.hp = boss.maxhp;
+            boss.xp = boss.getMonsterTemplate().rcvXp;
+            setBossEventAppearTime(boss, bornTime);
+        }
+    }
+
+    private static void setBossOpenState(Boss boss, boolean open) {
+        boss.isOpen = open;
+        if (boss instanceof BossMatQuy) {
+            ((BossMatQuy) boss).isOpen = open;
+        } else if (boss instanceof BossThanLan) {
+            ((BossThanLan) boss).isOpen = open;
+        } else if (boss instanceof BossLinhXa) {
+            ((BossLinhXa) boss).isOpen = open;
+        } else if (boss instanceof BossBachXa) {
+            ((BossBachXa) boss).isOpen = open;
+        } else if (boss instanceof BossThuongLuong) {
+            ((BossThuongLuong) boss).isOpen = open;
+        }
+    }
+
+    private static void setBossEventAppearTime(Boss boss, long bornTime) {
+        switch (boss.idTemplate) {
+            case 93:
+                event.timeBossAppear[0] = bornTime;
+                break;
+            case 94:
+                event.timeBossAppear[1] = bornTime;
+                break;
+            case 91:
+            case 92:
+                event.timeBossAppear[2] = bornTime;
+                break;
+            case 82:
+                event.timeBossAppear[3] = bornTime;
+                break;
+            case 39:
+                event.timeBossAppear[4] = bornTime;
+                break;
+            case 113:
+                event.timeBossAppear[5] = bornTime;
+                break;
+            case 115:
+                event.timeBossAppear[6] = bornTime;
+                break;
+            default:
+                break;
+        }
+    }
+
     public static boolean canAddShopGemStack(Char player, int idGem, int amount, boolean lock) {
         int current = lock ? player.listGemitemLock[idGem] : Math.max(0, player.listGemitem[idGem] - player.listGemitemSell[idGem]);
         if (current + amount <= MAX_SHOP_GEM_STACK) {
@@ -3797,13 +3900,42 @@ public class Map implements Runnable {
         CharManager.instance.put(bot);
     }
 
+    private static void loadVillagePlayerBots(final Map map) {
+        addVillagePlayerBot(map, "BotBaoKiem", 1, 0, -33001, 25, 51, 77, 10, 723, 82, new short[][]{{544, 224}, {544, 416}, {784, 640}});
+        addVillagePlayerBot(map, "BotTieuSuMuoi", 2, 1, -33002, 277, 301, 325, 9, 724, 84, new short[][]{{592, 224}, {592, 416}, {832, 640}});
+        addVillagePlayerBot(map, "BotPhongVan", 1, 2, -33003, 269, 293, 317, 10, 740, 86, new short[][]{{640, 224}, {640, 416}, {880, 640}});
+        addVillagePlayerBot(map, "BotNgocLinh", 2, 3, -33004, 291, 315, 339, 9, 741, 88, new short[][]{{688, 224}, {688, 416}, {928, 640}});
+        addVillagePlayerBot(map, "BotHacLong", 1, 4, -33005, 25, 51, 77, 10, 743, 90, new short[][]{{736, 224}, {736, 416}, {976, 640}});
+    }
+
+    private static void addVillagePlayerBot(final Map map, final String name, final int gender, final int charClass, final int userId,
+                                            final int ao, final int quan, final int non, final int headStyle, final int modelId,
+                                            final int level, final short[][] positions) {
+        Char bot = new Char(null);
+        bot.setInfoChar(name, VILLAGE_PLAYER_BOT_TYPE, gender, charClass, map, positions[1][0], positions[1][1], userId, ao, quan, non);
+        bot.headStyle = (byte) headStyle;
+        bot.id = RealController.intance.idGen.getID(0, "Tao bot player");
+        bot.posNPCInVilage = positions;
+        bot.lvDetail.lv = level;
+        bot.maxhp = 12000 + level * 120;
+        bot.hp = bot.maxhp;
+        bot.maxmp = 6000 + level * 60;
+        bot.mp = bot.maxmp;
+        bot.speed = 4;
+        if (modelId > -1) {
+            bot.setInfoModelCharBot(0, modelId);
+        }
+        Map.npcVilage.add(bot);
+        CharManager.instance.put(bot);
+    }
+
     public static void loadNpcServer() {
-        int[] idItemShop = {751, 752, 753, 723, 724, 728, 746, 747, 748};
-        int[] array = new int[10];
+        int[] idItemShop = {751, 752, 753, 723, 724, 728, 746, 747, 748, 736, 737, 740, 741, 743, 744, 754, 755};
+        int[] array = new int[idItemShop.length];
         array[0] = 100000;
-        int[] priceluong = {100, 50, 50, 500, 500, 500, 1000, 1000, 1000};
-        int[] soLuong = {10, 1, 1, 1, 1, 1, 1, 1, 1};
-        int[] time = {0, 0, 0, 10800, 10800, 10800, 10800, 10800, 10800};
+        int[] priceluong = {100, 50, 50, 500, 500, 500, 1000, 1000, 1000, 1200, 1200, 1500, 1500, 1800, 1800, 1500, 1500};
+        int[] soLuong = {10, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
+        int[] time = {0, 0, 0, 10800, 10800, 10800, 10800, 10800, 10800, 10080, 10080, 10080, 10080, 10080, 10080, 10080, 10080};
         for (int i = 0; i < idItemShop.length; ++i) {
             Item newItem = new ItemShop(Map.itemTemplates.get(5).get(idItemShop[i]), false, 0, 0, idItemShop[i]);
             newItem.id = (short) i;
@@ -4051,6 +4183,7 @@ public class Map implements Runnable {
 //        Map.npcVilage.add(bot);
 //        CharManager.instance.put(bot);
 
+        loadVillagePlayerBots(m);
     }
 
 
@@ -4850,6 +4983,7 @@ public class Map implements Runnable {
                 if (event.timeBossAppear[1] > 0L) {
                     bo.bornTime = event.timeBossAppear[1];
                 }
+                prepareBossOnline(bo);
             } else if (type == 1) {
                 Boss bo = new BossMatQuy(null, (MonsterTemplate) monsterTemplates.get(93), 432, 112, 0);
                 bo.isDead = true;
@@ -4862,6 +4996,7 @@ public class Map implements Runnable {
                 }
 
                 boss.add(bo);
+                prepareBossOnline(bo);
                 bo = new BossThanLan(null, (MonsterTemplate) monsterTemplates.get(82), 432, 112, 0);
                 bo.isDead = true;
                 bo.id = RealController.intance.idGen.getID(1, "new monster");
@@ -4872,6 +5007,7 @@ public class Map implements Runnable {
                 }
 
                 boss.add(bo);
+                prepareBossOnline(bo);
                 Boss var7 = new BossThanLan(null, (MonsterTemplate) monsterTemplates.get(39), 432, 112, 0);
                 var7.isDead = true;
                 var7.id = RealController.intance.idGen.getID(1, "new monster");
@@ -4882,6 +5018,7 @@ public class Map implements Runnable {
                 }
 
                 boss.add(var7);
+                prepareBossOnline(var7);
                 Boss var8 = new BossLinhXa(null, (MonsterTemplate) monsterTemplates.get(91), 432, 112, 0);
                 var8.isDead = true;
                 var8.id = RealController.intance.idGen.getID(1, "new monster");
@@ -4892,6 +5029,7 @@ public class Map implements Runnable {
                 }
 
                 boss.add(var8);
+                prepareBossOnline(var8);
 
                 try {
                     Boss var9 = new BossBachXa(null, (MonsterTemplate) monsterTemplates.get(92), 432, 112, 0);
@@ -4904,6 +5042,7 @@ public class Map implements Runnable {
                     }
 
                     boss.add(var9);
+                    prepareBossOnline(var9);
                 } catch (Exception var4) {
                 }
 
@@ -4918,6 +5057,7 @@ public class Map implements Runnable {
 
                 var10.bornTime = 1000L;
                 boss.add(var10);
+                prepareBossOnline(var10);
                 Boss var11 = new BossSkelonton(null, (MonsterTemplate) monsterTemplates.get(115), 432, 112, 0);
                 var11.isDead = true;
                 var11.id = RealController.intance.idGen.getID(1, "new monster");
@@ -4928,6 +5068,7 @@ public class Map implements Runnable {
                 }
 
                 boss.add(var11);
+                prepareBossOnline(var11);
             }
         }
     }
@@ -6206,6 +6347,7 @@ public class Map implements Runnable {
             bo.he = he[r.nextInt(5)];
             bo.level = bo.getMonsterTemplate().level;
             bossTime.add(bo);
+            prepareBossOnline(bo);
             timeCheckCallBoss = System.currentTimeMillis() + 14400000L;
         }
 
@@ -15534,6 +15676,11 @@ public class Map implements Runnable {
                     Item it = (Item) all_item_shop_special.get(iditem);
                     int xu = it.getXuSell();
                     int luong = it.getLuongSell();
+                    if (isVip3ShopSpecialFashionItem(it) && player.vip < 3) {
+                        player.sendMessage(MessageCreator.createServerAlertMessage("Bạn cần VIP 3 trở lên để mua thời trang này.", ""));
+                        return;
+                    }
+
                     if (player.getxu() < (long) xu) {
                         player.sendMessage(MessageCreator.createServerAlertMessage("Không đủ xu", ""));
                         return;
@@ -15635,7 +15782,7 @@ public class Map implements Runnable {
                                         "shopvip"
                                 );
                         Database.instance.saveLogThongKeChiTieu(it.getName(), 0, it.getSoluong(), (long) (xu > 0 ? xu : (luong > 0 ? luong : 0)), money);
-                    } else if (it.isAoDai2021() || it.isTieuLongNu() || it.isDuongQua()) {
+                    } else if (it.isAoDai2021() || it.isTieuLongNu() || it.isDuongQua() || isVip3ShopSpecialFashionItem(it)) {
                         if (player.vip <= 0) {
                             player.sendMessage(MessageCreator.createServerAlertMessage("Bạn Cần Vip 1 Trở lên để thực hiện tính năng này.", ""));
                             return;
@@ -21069,6 +21216,10 @@ public class Map implements Runnable {
                     }
                     break;
                 case -517:
+                    if (player.vip < 3) {
+                        player.sendMessage(MessageCreator.createServerAlertMessage("Yêu cầu VIP 3 trở lên để chế tạo Thần Khí.", ""));
+                        return;
+                    }
                     switch (idOptionMenu) {
                         case 0:
                         if (!player.isCorrectPass && !player.passWord.equals("")) {
@@ -36443,9 +36594,9 @@ public class Map implements Runnable {
         player.sendMessage(MessageCreator.createCharInventoryMessage(player, 1));
 
         final Animal anima = new Animal();
-        anima.createAtt();
         anima.name = name;
         anima.idImg = idImg;
+        anima.createAtt();
         anima.level = 1;
         anima.place = 0;
         anima.ownerId = player.charDBID;
@@ -36456,6 +36607,15 @@ public class Map implements Runnable {
         Database.instance.saveAnimal(anima);
         Database.instance.saveOrtherLog("tob_log_other_animal", player.charname, "Tao " + anima.name + " bang " + egg.getName() + " | " + anima.getAttribute(), "crt");
         player.sendMessage(MessageCreator.createServerAlertMessage("Chúc mừng. Bạn đã tạo được linh thú " + anima.name, ""));
+    }
+
+    private boolean ensurePetUsing(final Char player) {
+        if (player.petUsing == null) {
+            player.sendMessage(MessageCreator.createServerAlertMessage("Bạn phải gọi thú nuôi ra trước.", ""));
+            return false;
+        }
+
+        return true;
     }
 
 
@@ -36498,6 +36658,10 @@ public class Map implements Runnable {
                  
 
                     if (item.isSachSkillPet()) {
+                        if (!this.ensurePetUsing(player)) {
+                            return;
+                        }
+
                         if (player.petUsing.canLearnSkill()) {
                             int idskill = player.petUsing.doLearSkill();
                             player.iItems.remove(item);
@@ -36596,6 +36760,10 @@ public class Map implements Runnable {
                     }
 
                     if (item.isHuyetLinhThao()) {
+                        if (!this.ensurePetUsing(player)) {
+                            return;
+                        }
+
                         if (!player.petUsing.checkCanTienHoa()) {
                             if (player.petUsing.itemPet != null && player.petUsing.itemPet.level < 2) {
                                 player.sendMessage(
@@ -36620,6 +36788,10 @@ public class Map implements Runnable {
                     }
 
                     if (item.isHuyetBoDe()) {
+                        if (!this.ensurePetUsing(player)) {
+                            return;
+                        }
+
                         if (!player.petUsing.checkCanChangeThongThao()) {
                             if (player.petUsing.itemPet != null) {
                                 player.sendMessage(MessageCreator.createServerAlertMessage("Thú nuôi của bạn chưa đủ điều kiện để sử dụng.", ""));
@@ -38487,30 +38659,29 @@ public class Map implements Runnable {
                                                 loadGhost = false;
                                             } else if (msgChat.startsWith("openboss")) {
                                                 if (player.isAdmin) {
-                                                    if (msgChat.startsWith("openboss1")) {
-                                                        ((Boss) boss.get(0)).isOpen = true;
-                                                        ((Boss) boss.get(0)).bornTime = System.currentTimeMillis() + 30000L;
+                                                    if (msgChat.equals("openboss") || msgChat.startsWith("openbossall")) {
+                                                        openAllBossNow();
+                                                        player.sendMessage(MessageCreator.createServerAlertMessage("Đã mở toàn bộ boss.", ""));
+                                                    } else if (msgChat.startsWith("openboss1")) {
+                                                        openBossNow((Boss) boss.get(0), System.currentTimeMillis() + 30000L);
                                                     } else if (msgChat.startsWith("openboss2")) {
-                                                        ((Boss) boss.get(1)).isOpen = true;
-                                                        ((Boss) boss.get(1)).bornTime = System.currentTimeMillis() + 30000L;
+                                                        openBossNow((Boss) boss.get(1), System.currentTimeMillis() + 30000L);
                                                     } else if (msgChat.startsWith("openboss3")) {
-                                                        ((Boss) boss.get(2)).isOpen = true;
-                                                        ((Boss) boss.get(2)).bornTime = System.currentTimeMillis() + 30000L;
+                                                        openBossNow((Boss) boss.get(2), System.currentTimeMillis() + 30000L);
                                                     } else if (msgChat.startsWith("openboss4")) {
-                                                        ((Boss) boss.get(3)).isOpen = true;
-                                                        ((Boss) boss.get(3)).bornTime = System.currentTimeMillis() + 30000L;
+                                                        openBossNow((Boss) boss.get(3), System.currentTimeMillis() + 30000L);
                                                     }
                                                 }
                                             } else if (msgChat.startsWith("offboss")) {
                                                 if (player.isAdmin) {
                                                     if (msgChat.startsWith("offboss1")) {
-                                                        ((Boss) boss.get(0)).isOpen = false;
+                                                        setBossOpenState((Boss) boss.get(0), false);
                                                     } else if (msgChat.startsWith("offboss2")) {
-                                                        ((Boss) boss.get(1)).isOpen = false;
+                                                        setBossOpenState((Boss) boss.get(1), false);
                                                     } else if (msgChat.startsWith("offboss3")) {
-                                                        ((Boss) boss.get(2)).isOpen = false;
+                                                        setBossOpenState((Boss) boss.get(2), false);
                                                     } else if (msgChat.startsWith("offboss4")) {
-                                                        ((Boss) boss.get(3)).isOpen = false;
+                                                        setBossOpenState((Boss) boss.get(3), false);
                                                     }
                                                 }
                                             } else if (msgChat.startsWith("mc") && player.isAdmin) {

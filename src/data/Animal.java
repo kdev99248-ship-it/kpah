@@ -36,7 +36,7 @@ public class Animal extends Actor {
     public long timeHoaHinh = 0L;
     public String name = "";
     static byte[] addMoreSP = new byte[]{0, 0, 0, 0, 0, 2, 3, 0, 3, 3, 3, 3, 3, 3, 3}; // Thêm giá trị cho index 14
-static byte[] addMoreBasic = new byte[]{0, 0, 0, 0, 0, 4, 3, 0, 6, 6, 6, 6, 6, 6, 6}; // Thêm giá trị cho index 14
+    static byte[] addMoreBasic = new byte[]{0, 0, 0, 0, 0, 4, 3, 0, 6, 6, 6, 6, 6, 6, 6}; // Thêm giá trị cho index 14
     static byte[][] pcBasic = new byte[][]{{3, 5, 8, 10}, {3, 5, 8, 10}, {3, 5, 8, 10}, {2, 3, 4, 5}, {2, 3, 4, 5}};
     static byte[][][] pcTN = new byte[][][]{
         {{5, 9, 14, 18}, {5, 9, 14, 18}, {4, 8, 12, 16}, {4, 8, 12, 16}},          // index 0
@@ -96,6 +96,36 @@ static byte[] addMoreBasic = new byte[]{0, 0, 0, 0, 0, 4, 3, 0, 6, 6, 6, 6, 6, 6
      */
     public static byte[] typeAnimal = new byte[]{0, 0, 0, 0, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0 ,0};
     public long texpire = 0L;
+
+    private int getStatProfileIndex() {
+        switch (this.idImg) {
+            case PHUONG_HOANG_MOC:
+            case PHUONG_HOANG_KIM:
+            case PHUONG_HOANG_THO:
+                return PHUONG_HOANG_7MAU;
+            case HEO_BANG:
+                return HEO;
+            case SU_TU:
+                return LAN;
+            default:
+                return this.idImg >= 0 && this.idImg < pcTN.length ? this.idImg : BACH_MA;
+        }
+    }
+
+    private int getAddMoreSP() {
+        int index = this.getStatProfileIndex();
+        return index >= 0 && index < addMoreSP.length ? addMoreSP[index] : 0;
+    }
+
+    private int getAddMoreBasic() {
+        int index = this.getStatProfileIndex();
+        return index >= 0 && index < addMoreBasic.length ? addMoreBasic[index] : 0;
+    }
+
+    private byte[] getPotentialLimit(final int potentialIndex) {
+        int index = this.getStatProfileIndex();
+        return pcTN[index][potentialIndex];
+    }
 
     /**
      * todo option kháng thú cưỡi banglan, setlan, doclan, lualan
@@ -200,7 +230,7 @@ static byte[] addMoreBasic = new byte[]{0, 0, 0, 0, 0, 4, 3, 0, 6, 6, 6, 6, 6, 6
 
     public int getIdImageTool() {
         // Check if animal is transformed
-        if (this.isHoaHinh == 1) {
+        if (this.isHoaHinh()) {
             // Calculate remaining days
             long remainingTime = this.timeHoaHinh - System.currentTimeMillis();
             long remainingDays = remainingTime / (24L * 60L * 60000L);
@@ -232,7 +262,7 @@ static byte[] addMoreBasic = new byte[]{0, 0, 0, 0, 0, 4, 3, 0, 6, 6, 6, 6, 6, 6
 
     public int getIndexDxy() {
          // Check if animal is transformed  
-         if (this.isHoaHinh == 1) {
+         if (this.isHoaHinh()) {
             return 4; // Giá trị index mặc định khi hóa hình
         }
 
@@ -485,7 +515,7 @@ static byte[] addMoreBasic = new byte[]{0, 0, 0, 0, 0, 4, 3, 0, 6, 6, 6, 6, 6, 6
             info = info + "- Trả đũa :\n Giảm 50% sát thương nhận từ phản sát thương\n";
         }
 
-        if (this.isHoaHinh == 1) {
+        if (this.isHoaHinh()) {
             info = info + "\nLửa thượng cổ\n";
             info = info + "Trừ 10% giáp mỗi hit bị đánh\n"; 
             info = info + "Thời gian tồn tại 10s\n";
@@ -720,7 +750,7 @@ static byte[] addMoreBasic = new byte[]{0, 0, 0, 0, 0, 4, 3, 0, 6, 6, 6, 6, 6, 6
 
             i = (Integer) index.get(Map.r.nextInt(index.size()));
             Database.instance.saveOrtherLog("tob_log_other_animal", p.getName(), this.getAttribute() + " | " + i + " | " + this.level + " | " + this.name, "ulva");
-            this.att[i] = (short) (Map.r.nextInt(pcTN[this.idImg][i - 5][this.level - 1]) + 1);
+            this.att[i] = (short) (Map.r.nextInt(this.getPotentialLimit(i - 5)[this.level - 1]) + 1);
             ++this.level;
             return true;
         }
@@ -734,14 +764,14 @@ static byte[] addMoreBasic = new byte[]{0, 0, 0, 0, 0, 4, 3, 0, 6, 6, 6, 6, 6, 6
                     return false;
                 }
 
-                if (this.att[i] < pcBasic[i][this.level - 1] / 1000) {
+                if (i >= 3 && this.att[i] < pcBasic[i][this.level - 1] * 1000) {
                     return false;
                 }
             }
         }
 
         for (i = 0; i < 4; ++i) {
-            if (this.att[i + 5] > 0 && this.att[i + 5] < pcTN[this.idImg][i][this.level - 1]) {
+            if (this.att[i + 5] > 0 && this.att[i + 5] < this.getPotentialLimit(i)[this.level - 1]) {
                 return false;
             }
         }
@@ -759,31 +789,33 @@ static byte[] addMoreBasic = new byte[]{0, 0, 0, 0, 0, 4, 3, 0, 6, 6, 6, 6, 6, 6
         boolean result = false;
         short[] var10000;
         int i;
+        int addMoreSPValue = this.getAddMoreSP();
+        int addMoreBasicValue = this.getAddMoreBasic();
         if (type == 1) {
             for (i = 0; i < 5; ++i) {
-                if (this.att[i + 9] > 0 && this.att[i + 9] < pcSP[i][this.level - 1] + addMoreSP[this.idImg]) {
+                if (this.att[i + 9] > 0 && this.att[i + 9] < pcSP[i][this.level - 1] + addMoreSPValue) {
                     var10000 = this.att;
-                    var10000[i + 9] = (short) (var10000[i + 9] + 1 + addMoreSP[this.idImg]);
+                    var10000[i + 9] = (short) (var10000[i + 9] + 1 + addMoreSPValue);
                     result = true;
                 }
             }
         } else if (type == 0) {
             for (i = 0; i < 4; ++i) {
-                if (this.att[i + 5] > 0 && this.att[i + 5] < pcTN[this.idImg][i][this.level - 1] + addMoreSP[this.idImg]) {
+                if (this.att[i + 5] > 0 && this.att[i + 5] < this.getPotentialLimit(i)[this.level - 1] + addMoreSPValue) {
                     var10000 = this.att;
-                    var10000[i + 5] = (short) (var10000[i + 5] + 1 + addMoreSP[this.idImg]);
+                    var10000[i + 5] = (short) (var10000[i + 5] + 1 + addMoreSPValue);
                     result = true;
                 }
             }
         } else {
             for (i = 0; i < 5; ++i) {
-                if (this.att[i] < (i >= 3 ? (pcBasic[i][this.level - 1] + addMoreSP[this.idImg]) * 1000 : pcBasic[i][this.level - 1] + (this.idImg != 8 && this.idImg != 5 ? addMoreSP[this.idImg] : addMoreBasic[this.idImg]))) {
+                if (this.att[i] < (i >= 3 ? (pcBasic[i][this.level - 1] + addMoreSPValue) * 1000 : pcBasic[i][this.level - 1] + (this.idImg != 8 && this.idImg != 5 ? addMoreSPValue : addMoreBasicValue))) {
                     if (this.idImg != 5 && this.idImg != 8) {
                         var10000 = this.att;
-                        var10000[i] = (short) (var10000[i] + (i < 3 ? 1 : 1000) + addMoreSP[this.idImg]);
+                        var10000[i] = (short) (var10000[i] + (i < 3 ? 1 : 1000) + addMoreSPValue);
                     } else {
                         var10000 = this.att;
-                        var10000[i] = (short) (var10000[i] + (i < 3 ? 1 : 1000 + addMoreSP[this.idImg]));
+                        var10000[i] = (short) (var10000[i] + (i < 3 ? 1 : 1000 + addMoreSPValue));
                     }
 
                     result = true;
@@ -987,7 +1019,7 @@ static byte[] addMoreBasic = new byte[]{0, 0, 0, 0, 0, 4, 3, 0, 6, 6, 6, 6, 6, 6
     }
 
     public boolean isHoaHinh() {
-        return this.isHoaHinh == 1 && System.currentTimeMillis() - this.timeHoaHinh > 0L;
+        return this.isHoaHinh == 1 && this.timeHoaHinh > System.currentTimeMillis();
     }
 
     public void doHoaHinh(Char p) {
@@ -1005,7 +1037,7 @@ static byte[] addMoreBasic = new byte[]{0, 0, 0, 0, 0, 4, 3, 0, 6, 6, 6, 6, 6, 6
             return;
         }
 
-        if (p.animalRide.isHoaHinh == 1 && System.currentTimeMillis() - p.animalRide.timeHoaHinh > 0L) {
+        if (p.animalRide.isHoaHinh()) {
             p.sendMessage(MessageCreator.createServerAlertMessage("Linh thú đã hóa hình, vui lòng đợi 15 ngày để hóa hình lại", ""));
             return;
         }

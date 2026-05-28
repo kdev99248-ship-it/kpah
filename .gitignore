@@ -31,6 +31,9 @@ bin/
 ### Others ###
 .svn
 /build/
+/run/
+game.log
+watchdog.log
 loginServer/server.ini
 errorlog.txt
 cuoptieu.txt
