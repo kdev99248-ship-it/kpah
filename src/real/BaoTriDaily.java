@@ -102,7 +102,7 @@ public class BaoTriDaily implements Runnable {
                     System.out.println("THOAT");
                     Logger.logStringWithDate(String.valueOf(MapTown.count_all_item_sell_per_day) + "_" + ItemSell.ID_ITEM_SELL_AUTO_INCREMENT, "matketinfo.txt");
                     try {
-                        Desktop.getDesktop().open(new File("run.bat"));
+                        Desktop.getDesktop().open(new File("run.sh"));
                     } catch (Exception e) {
                     }
                     System.exit(0);
